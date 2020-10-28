@@ -31,15 +31,13 @@ RUN apt-get -qq install --yes \
             texlive-fonts-recommended \
             texlive-generic-recommended > /dev/null
 
+# 290MB
 RUN apt-get -qq install --yes \
             # for LS88-5 and modules basemap
             libspatialindex-dev \
-            libgeos-dev \
-            # for phys 151
-            gfortran \
-            # for eps 109; fall 2019
-            ffmpeg > /dev/null
+            libgeos-dev
 
+# 700MB
 # install R, packages, and RStudio dependencies
 RUN apt-get -qq update --yes && \
     apt-get -qq install --yes \
@@ -130,6 +128,7 @@ COPY install.R  /tmp/install.R
 # We send stdout to a log file, and tail it a bit
 # FIXME: Find something less sucky
 # another hubploy #1
+# 226MB
 RUN Rscript /tmp/install.R > /tmp/r-custom-packages.log 2>&1 && \
     true || ( echo FAIL ; tail /tmp/r-custom-packages.log ; false )
 RUN tail /tmp/r-custom-packages.log
@@ -139,6 +138,7 @@ ENV RSTUDIO_URL https://download2.rstudio.org/rstudio-server-1.1.453-amd64.deb
 ENV RSTUDIO_CHECKSUM 3c546fa9067f48ed1a342f810fca8be6
 
 # install rstudio
+# 356MB
 RUN curl --silent --location --fail ${RSTUDIO_URL} > /tmp/rstudio.deb && \
     echo "${RSTUDIO_CHECKSUM} /tmp/rstudio.deb" | md5sum -c - && \
     dpkg -i /tmp/rstudio.deb && \
@@ -171,6 +171,7 @@ RUN apt-get update && \
 WORKDIR /home/${NB_USER}
 
 COPY install-miniforge.bash /tmp/install-miniforge.bash
+# 207MB
 RUN /tmp/install-miniforge.bash
 
 USER ${NB_USER}
@@ -179,48 +180,20 @@ COPY environment.yml /tmp/environment.yml
 COPY requirements.txt /tmp/requirements.txt
 COPY infra-requirements.txt /tmp/infra-requirements.txt
 
+# 532MB
 RUN conda env update -p ${CONDA_DIR} -f /tmp/environment.yml
 
-
+# 237MB
 RUN pip install --no-cache -r /tmp/infra-requirements.txt
-
-# Install jupyterlab extensions immediately after infra-requirements
-# This hopefully prevents re-installation all the time
-# `jlpm` calls out to yarn internally, and we tell it to
-# use a temporary cache. This reduces file size,
-# but also prevents strange permission errors -
-# like https://app.circleci.com/pipelines/github/berkeley-dsep-infra/datahub/1176/workflows/7f49851f-c2fc-46ca-b887-15d8e5612097/jobs/13584
-RUN jlpm cache dir && mkdir -p /tmp/yarncache && \
-    jlpm config set cache-folder /tmp/yarncache && \
-    jupyter labextension install --debug \
-            @jupyter-widgets/jupyterlab-manager \
-            jupyter-matplotlib \
-            jupyterlab-plotly \
-            @jupyterlab/geojson-extension \
-            jupyterlab-videochat@0.4 && \
-    rm -rf /tmp/yarncache
 
 RUN pip install --no-cache numpy==1.18.5 cython==0.29.21
 RUN pip install --no-cache -r /tmp/requirements.txt
-# Set up nbpdf dependencies
-ENV PYPPETEER_HOME ${CONDA_DIR}
-RUN pyppeteer-install
 
 # Install IR kernelspec
 RUN Rscript -e "IRkernel::installspec(user = FALSE, prefix='${CONDA_DIR}')"
 
 COPY d8extension.bash /usr/local/sbin/d8extension.bash
 RUN /usr/local/sbin/d8extension.bash
-
-ENV NLTK_DATA ${CONDA_DIR}/nltk_data
-COPY connectors/text.bash /usr/local/sbin/connector-text.bash
-RUN /usr/local/sbin/connector-text.bash
-
-COPY connectors/sw282.bash /usr/local/sbin/connector-sw282.bash
-RUN /usr/local/sbin/connector-sw282.bash
-
-COPY connectors/2019-fall-phys-188-288.bash /usr/local/sbin/
-RUN /usr/local/sbin/2019-fall-phys-188-288.bash
 
 ADD ipython_config.py ${IPYTHONDIR}/ipython_config.py
 

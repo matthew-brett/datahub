@@ -60,41 +60,10 @@ emcee==3.0.2
 daft==0.1.0
 corner==2.1.0
 #
-# ce88;
-pymdptoolbox==4.0b3
-#
-# data-x; DL
-tensorflow==2.3.0
-scikit-image==0.17.2
-Keras==2.4.3
-keras-vis==0.4.1
-tables==3.6.1
-opencv-python==4.4.0.42
-
-# astr 128/256; spring 2020
-astroquery==0.4.1
-astropy==4.0
-dustmaps==1.0.4
-george==0.3.1
-exoplanet==0.3.2
-pymc3==3.9.3
-torch==1.6.0
-torchvision==0.7.0
 
 # eep 153; spring 2019
 requests==2.24.0
 Pint==0.14
-# Google spreadsheets, Eric Van Dusen / Keeley Takimoto / Modules
-gspread-pandas==2.2.3
-gspread==3.6.0
-
-# psych101d; fall 2019; cfrye
-Theano==1.0.5
-
-# eps 109; fall 2019
-ffmpeg-python==0.2.0
-# see https://github.com/berkeley-dsep-infra/datahub/issues/1796
-Cartopy==0.18.0 --no-binary Cartopy
 
 # data 88; spring 2020
 plotly==4.9.0
@@ -114,41 +83,5 @@ pyreadstat==1.0.0
 xarray==0.16.0
 dask==2.23.0
 
-# issue 1001, Physics 188/288 - fall 2019
-umap-learn==0.4.6
-hdbscan==0.8.26
-
-# espm 125/bio 105; fall 2019
-# see https://github.com/berkeley-dsep-infra/datahub/issues/1796
-shapely==1.7.0 --no-binary shapely
-pyvcf==0.6.8
-bitarray==1.5.2
-nlmpy==0.1.5
-
-# physics 188/288 fall, 2019
-getdist==1.1.2
-tensorflow-hub==0.8.0
-tensorflow-probability==0.11.0
-
-# mcb 163l, fall 2019
-pydot==1.4.1
-allensdk==2.1.0
-
-# cs16A/B, spring 2020
-lcapy==0.66.0
-
-# EPS 256, https://github.com/berkeley-dsep-infra/datahub/issues/1775
-obspy==1.2.2
-
-# ds198 mch infodemiology, fall 2020/spring 2021
-# google apis
-google-api-python-client==1.11.0
-google-auth-httplib2==0.0.4
-google-auth-oauthlib==0.4.1
-google==3.0.0
-
 # issue 1847; LS 22 spring 2021
 graphviz
-
-# issue #1903, data h195A fall 2020
-habanero==0.7.4
