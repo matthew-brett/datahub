@@ -1,9 +1,9 @@
 FROM buildpack-deps:bionic-scm
 
-ENV CONDA_DIR /opt/conda
+ENV BASE_DIR /usr/local
 
 # Set up common env variables
-ENV TZ=America/Los_Angeles
+ENV TZ=Europe/London
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ENV LC_ALL en_US.UTF-8
@@ -30,12 +30,6 @@ RUN apt-get -qq install --yes \
             texlive-xetex \
             texlive-fonts-recommended \
             texlive-generic-recommended > /dev/null
-
-# 290MB
-RUN apt-get -qq install --yes \
-            # for LS88-5 and modules basemap
-            libspatialindex-dev \
-            libgeos-dev
 
 # 700MB
 # install R, packages, and RStudio dependencies
@@ -117,7 +111,7 @@ RUN apt-get -qq update --yes && \
             r-cran-jsonlite \
             r-cran-assertthat \
             lsb-release > /dev/null
-            
+
 # install graphviz
 RUN apt-get -qq update --yes && \
     apt-get -qq install --yes graphviz
@@ -144,10 +138,10 @@ RUN curl --silent --location --fail ${RSTUDIO_URL} > /tmp/rstudio.deb && \
     dpkg -i /tmp/rstudio.deb && \
     rm /tmp/rstudio.deb
 
-ENV PATH ${CONDA_DIR}/bin:$PATH:/usr/lib/rstudio-server/bin
+ENV PATH ${BASE_DIR}/bin:$PATH:/usr/lib/rstudio-server/bin
 
 # Set this to be on container storage, rather than under $HOME
-ENV IPYTHONDIR ${CONDA_DIR}/etc/ipython
+ENV IPYTHONDIR ${BASE_DIR}/etc/ipython
 
 # FIXME: Move this elsewhere in the dockerfile?
 # Install packages needed by notebook-as-pdf
@@ -170,38 +164,28 @@ RUN apt-get update && \
 
 WORKDIR /home/${NB_USER}
 
-COPY install-miniforge.bash /tmp/install-miniforge.bash
-# 207MB
-RUN /tmp/install-miniforge.bash
-
-USER ${NB_USER}
+COPY install_python3.sh /tmp/install_python3.sh
+RUN /tmp/install_python3.sh
 
 COPY environment.yml /tmp/environment.yml
 COPY requirements.txt /tmp/requirements.txt
 COPY infra-requirements.txt /tmp/infra-requirements.txt
 
-# 532MB
-RUN conda env update -p ${CONDA_DIR} -f /tmp/environment.yml
-
-# 237MB
 RUN pip install --no-cache -r /tmp/infra-requirements.txt
 
-RUN pip install --no-cache numpy==1.18.5 cython==0.29.21
 RUN pip install --no-cache -r /tmp/requirements.txt
 
 # Install IR kernelspec
-RUN Rscript -e "IRkernel::installspec(user = FALSE, prefix='${CONDA_DIR}')"
+RUN Rscript -e "IRkernel::installspec(user = FALSE, prefix='${BASE_DIR}')"
 
 COPY d8extension.bash /usr/local/sbin/d8extension.bash
 RUN /usr/local/sbin/d8extension.bash
 
 ADD ipython_config.py ${IPYTHONDIR}/ipython_config.py
 
-# install gmaps notebook extension
-RUN jupyter nbextension enable --py --sys-prefix gmaps
-
 # install QGrid notebook extension
 RUN jupyter nbextension enable --py --sys-prefix qgrid
 
+USER ${NB_USER}
 
 EXPOSE 8888
