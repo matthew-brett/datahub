@@ -12,6 +12,7 @@ ENV LANGUAGE en_US.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NB_USER jovyan
 ENV NB_UID 1000
+ENV PY_VER 3.8
 
 RUN adduser --disabled-password --gecos "Default Jupyter user" ${NB_USER}
 
@@ -23,6 +24,11 @@ RUN apt-get -qq update --yes && \
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
+
+# Install Python
+COPY install_python3.sh /tmp/install_python3.sh
+RUN /tmp/install_python3.sh
+
 
 # for nbconvert
 RUN apt-get -qq install --yes \
@@ -162,11 +168,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /home/${NB_USER}
-
-COPY install_python3.sh /tmp/install_python3.sh
-RUN /tmp/install_python3.sh
-
+# Python package install
 COPY environment.yml /tmp/environment.yml
 COPY requirements.txt /tmp/requirements.txt
 COPY infra-requirements.txt /tmp/infra-requirements.txt
@@ -185,6 +187,10 @@ ADD ipython_config.py ${IPYTHONDIR}/ipython_config.py
 
 # install QGrid notebook extension
 RUN jupyter nbextension enable --py --sys-prefix qgrid
+
+# Pip user install
+WORKDIR /home/${NB_USER}
+ENV PATH ${WORKDIR}/.local/bin:$PATH
 
 USER ${NB_USER}
 
